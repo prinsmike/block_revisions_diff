@@ -10,7 +10,7 @@ function block_revisions_diff_menu() {
 		'page arguments' => array(5),
 		'access callback' => 'block_revisions_diff_access',
 		'access arguments' => array(4, 5),
-		'type' => MENU_LOCAL_TASK,
+		'type' => MENU_DEFAULT_LOCAL_TASK,
 		);
 	return $items;
 }
