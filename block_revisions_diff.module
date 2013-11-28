@@ -3,7 +3,7 @@
 /**
  * Implements hook_menu().
  */
-function block_revisions_diff() {
+function block_revisions_diff_menu() {
 	$items['admin/structure/block/manage/%/%/revisions'] = array(
 		'title' => 'Revisions',
 		'page callback' => 'block_revisions_diff_overview',
