@@ -29,7 +29,7 @@ function block_revisions_diff_revisions($form, $form_state, $delta) {
 	$block = db_query('SELECT b.info, b.timestamp, b.uid FROM {block_custom} b WHERE b.bid = :bid', array(':bid' => $delta))->fetchObject();
 
 	$revision_list = block_revision_list($delta);
-	$latest_revision = reset($revisions);
+	$latest_revision = reset($revision_list);
 
   	// By comparing the timestamp of the block with the timestamp of the
   	// most recent revision, we can determine if the block was altered
