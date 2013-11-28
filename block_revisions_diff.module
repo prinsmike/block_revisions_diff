@@ -4,8 +4,8 @@
  * Implements hook_menu().
  */
 function block_revisions_diff_menu() {
-	$items['admin/structure/block/manage/%/%/revisions'] = array(
-		'title' => 'Revisions',
+	$items['admin/structure/block/manage/%/%/revisions/list'] = array(
+		'title' => 'List revisions',
 		'page callback' => 'block_revisions_diff_overview',
 		'page arguments' => array(5),
 		'access callback' => '_block_revisions_access',
