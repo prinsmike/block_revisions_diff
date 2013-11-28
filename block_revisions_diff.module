@@ -1,0 +1,121 @@
+<?php
+
+/**
+ * Implements hook_menu().
+ */
+function block_revisions_diff() {
+	$items['admin/structure/block/manage/%/%/revisions'] = array(
+		'title' => 'Revisions',
+		'page callback' => 'block_revisions_diff_overview',
+		'page arguments' => array(5),
+		'access callback' => '_block_revisions_access',
+		'access arguments' => array(4, 5),
+		'type' => MENU_LOCAL_TASK,
+		);
+}
+
+function block_revisions_diff_overview($form, $form_state, $delta) {
+
+	module_load_include('inc', 'block_revisions', 'block_revisions.admin');
+	
+	// Fetch information about the block and the current revision from the database.
+	$block = db_query('SELECT b.info, b.timestamp, b.uid FROM {block_custom} b WHERE b.bid = :bid', array(':bid' => $delta))->fetchObject();
+
+	$revisions = block_revision_list($delta);
+	$latest_revision = reset($revisions);
+
+  	// By comparing the timestamp of the block with the timestamp of the
+  	// most recent revision, we can determine if the block was altered
+  	// after that revision was created. If it is, warn the user that
+  	// the most recent revision differs from the actual block content.
+	if ($block->timestamp !== $latest_revision->timestamp) {
+		$account = array_shift(user_load_multiple(array($block->uid)));
+		drupal_set_message(t('Warning: the block has been altered since the most recent revision. The latest, non-versioned, edit was made by !username on %timestamp.', array('!username' => theme('username', array('account' => $account)), '%timestamp' => format_date($block->timestamp))), 'warning');
+	}
+
+	if (count($revision_list) > REVISION_LIST_SIZE) {
+    // If the list of revisions is longer than the number shown on one page
+    // split the array.
+    $page = isset($_GET['page']) ? $_GET['page'] : '0';
+    $revision_chunks = array_chunk(block_revision_list($delta), REVISION_LIST_SIZE);
+    $revisions = $revision_chunks[$page];
+    // Set up global pager variables as would 'pager_query' do.
+    // These variables are then used in the theme('pager') call later.
+    global $pager_page_array, $pager_total, $pager_total_items;
+    $pager_total_items[0] = count($revision_list);
+    $pager_total[0] = ceil(count($revision_list) / REVISION_LIST_SIZE);
+    $pager_page_array[0] = max(0, min($page, ((int) $pager_total[0]) - 1));
+  }
+  else {
+    $revisions = $revision_list;
+  }
+
+  $revert_permission = FALSE;
+  if ((user_access('revert revisions') || user_access('administer nodes')) && node_access('update', $node)) {
+    $revert_permission = TRUE;
+  }
+  $delete_permission = FALSE;
+  if ((user_access('delete revisions') || user_access('administer nodes')) && node_access('delete', $node)) {
+    $delete_permission = TRUE;
+  }
+
+  foreach ($revisions as $revision) {
+    $operations = array();
+    $revision_ids[$revision->vid] = '';
+
+    $revision_log = ($revision->log != '') ? '<p class="revision-log">' . filter_xss($revision->log) . '</p>' : '';
+    if ($revision->current_vid > 0) {
+      $form['info'][$revision->vid] = array(
+        '#markup' => t('!date by !username', array(
+          '!date' => l(format_date($revision->timestamp, 'small'), "node/$node->nid"),
+          '!username' => theme('username', array('account' => $revision)))) . $revision_log,
+      );
+    }
+    else {
+      $diff_date = format_date($revision->timestamp, 'small');
+      $form['info'][$revision->vid] = array(
+        '#markup' => t('!date by !username', array(
+          '!date' => $diff_date,
+          '!username' => theme('username', array('account' => $revision)))
+        ) . $revision_log,
+      );
+      if ($revert_permission) {
+        $operations[] = array(
+          '#markup' => l(t('Revert'), "admin/structure/block/revisions/revert/$delta/$revision->vid"),
+        );
+      }
+      if ($delete_permission) {
+        $operations[] = array(
+          '#markup' => l(t('Delete'), "admin/structure/block/revisions/delete/$delta/$revision->vid"),
+        );
+      }
+      // Set a dummy, even if the user has no permission for the other
+      // operations, so that we can check if the operations array is
+      // empty to know if the row denotes the current revision.
+      $operations[] = array();
+    }
+    $form['operations'][$revision->vid] = $operations;
+
+  }
+  $new_vid = key($revision_ids);
+  next($revision_ids);
+  $old_vid = key($revision_ids);
+  $form['diff']['old'] = array(
+    '#type' => 'radios',
+    '#options' => $revision_ids,
+    '#default_value' => $old_vid,
+  );
+  $form['diff']['new'] = array(
+    '#type' => 'radios',
+    '#options' => $revision_ids,
+    '#default_value' => $new_vid,
+  );
+
+  $form['submit'] = array('#type' => 'submit', '#value' => t('Compare'));
+
+  if (count($revision_list) > REVISION_LIST_SIZE) {
+    $form['#suffix'] = theme('pager');
+  }
+  $form['#attached'] = diff_build_attachments(TRUE);
+  return $form;
+}

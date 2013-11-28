@@ -1,0 +1,4 @@
+name = Block Revisions Diff
+description = Integrate the Drupal Diff module with the Block Revisions module.
+core = 7.x
+dependecies[] = block_revisions
