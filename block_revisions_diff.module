@@ -12,6 +12,7 @@ function block_revisions_diff_menu() {
 		'access arguments' => array(4, 5),
 		'type' => MENU_LOCAL_TASK,
 		);
+	return $items;
 }
 
 function block_revisions_diff_overview($delta) {
