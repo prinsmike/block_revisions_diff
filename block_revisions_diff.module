@@ -8,7 +8,7 @@ function block_revisions_diff_menu() {
 		'title' => 'List revisions',
 		'page callback' => 'block_revisions_diff_overview',
 		'page arguments' => array(5),
-		//'access callback' => '_block_revisions_access',
+		'access callback' => 'block_revisions_diff_access',
 		'access arguments' => array(4, 5),
 		'type' => MENU_LOCAL_TASK,
 		);
@@ -124,4 +124,13 @@ function block_revisions_diff_revisions($form, $form_state, $delta) {
   }
   $form['#attached'] = diff_build_attachments(TRUE);
   return $form;
+}
+
+function block_revisions_diff_access($module, $delta) {
+  if ($module !== 'block') {
+    return FALSE;
+  }
+  $revision_count = db_query('SELECT count(vid) FROM {boxes_revisions} WHERE bid = :bid', array(':bid' => $delta))->fetchField();
+
+  return user_access('administer blocks') && ($revision_count >= 1);
 }
