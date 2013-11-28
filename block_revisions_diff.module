@@ -3,14 +3,14 @@
 /**
  * Implements hook_menu().
  */
-function block_revisions_diff_menu() {
-	$items['admin/structure/block/manage/%/%/revisions/list'] = array(
+function block_revisions_diff_menu_alter(&$items) {
+	$items['admin/structure/block/manage/%/%/revisions'] = array(
 		'title' => 'List revisions',
 		'page callback' => 'block_revisions_diff_overview',
 		'page arguments' => array(5),
 		'access callback' => 'block_revisions_diff_access',
 		'access arguments' => array(4, 5),
-		'type' => MENU_DEFAULT_LOCAL_TASK,
+		'type' => MENU_LOCAL_TASK,
 		);
 	return $items;
 }
