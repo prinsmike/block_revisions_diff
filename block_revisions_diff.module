@@ -14,14 +14,20 @@ function block_revisions_diff_menu() {
 		);
 }
 
-function block_revisions_diff_overview($form, $form_state, $delta) {
+function block_revisions_diff_overview($delta) {
+	$title = db_query("SELECT info FROM {block_custom} WHERE bid = :bid", array(':bid' => $delta))->fetchField();
+	drupal_set_title(t('Revisions for %title', array('%title' => $title)), PASS_THROUGH);
+  	return drupal_get_form('block_revisions_diff_revisions', $node);
+}
+
+function block_revisions_diff_revisions($form, $form_state, $delta) {
 
 	module_load_include('inc', 'block_revisions', 'block_revisions.admin');
 	
 	// Fetch information about the block and the current revision from the database.
 	$block = db_query('SELECT b.info, b.timestamp, b.uid FROM {block_custom} b WHERE b.bid = :bid', array(':bid' => $delta))->fetchObject();
 
-	$revisions = block_revision_list($delta);
+	$revision_list = block_revision_list($delta);
 	$latest_revision = reset($revisions);
 
   	// By comparing the timestamp of the block with the timestamp of the
