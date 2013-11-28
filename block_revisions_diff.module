@@ -8,7 +8,7 @@ function block_revisions_diff_menu() {
 		'title' => 'List revisions',
 		'page callback' => 'block_revisions_diff_overview',
 		'page arguments' => array(5),
-		'access callback' => '_block_revisions_access',
+		//'access callback' => '_block_revisions_access',
 		'access arguments' => array(4, 5),
 		'type' => MENU_LOCAL_TASK,
 		);
@@ -17,7 +17,7 @@ function block_revisions_diff_menu() {
 function block_revisions_diff_overview($delta) {
 	$title = db_query("SELECT info FROM {block_custom} WHERE bid = :bid", array(':bid' => $delta))->fetchField();
 	drupal_set_title(t('Revisions for %title', array('%title' => $title)), PASS_THROUGH);
-  	return drupal_get_form('block_revisions_diff_revisions', $node);
+  	return drupal_get_form('block_revisions_diff_revisions', $delta);
 }
 
 function block_revisions_diff_revisions($form, $form_state, $delta) {
