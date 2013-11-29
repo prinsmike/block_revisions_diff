@@ -29,7 +29,6 @@ function block_revisions_diff_revisions($form, $form_state, $delta) {
 
 	$revision_list = block_revision_list($delta);
 	$latest_revision = reset($revision_list);
-  dsm($latest_revision);
 
   	// By comparing the timestamp of the block with the timestamp of the
   	// most recent revision, we can determine if the block was altered
