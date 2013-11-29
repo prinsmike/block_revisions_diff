@@ -58,11 +58,11 @@ function block_revisions_diff_revisions($form, $form_state, $delta) {
   }
 
   $revert_permission = FALSE;
-  if ((user_access('revert revisions') || user_access('administer nodes')) {
+  if (user_access('revert revisions') || user_access('administer nodes')) {
     $revert_permission = TRUE;
   }
   $delete_permission = FALSE;
-  if ((user_access('delete revisions') || user_access('administer nodes')) {
+  if (user_access('delete revisions') || user_access('administer nodes')) {
     $delete_permission = TRUE;
   }
 
