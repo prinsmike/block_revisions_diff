@@ -74,7 +74,7 @@ function block_revisions_diff_revisions($form, $form_state, $delta) {
     if ($revision->vid == $latest_revision->vid) {
       $form['info'][$revision->vid] = array(
         '#markup' => t('!date by !username', array(
-          '!date' => l(format_date($revision->timestamp, 'small'), "node/$node->nid"),
+          '!date' => l(format_date($revision->timestamp, 'small'), "admin/structure/block/manage/block/$delta"),
           '!username' => theme('username', array('account' => $revision)))) . $revision_log,
       );
     }
