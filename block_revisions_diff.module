@@ -71,7 +71,7 @@ function block_revisions_diff_revisions($form, $form_state, $delta) {
     $revision_ids[$revision->vid] = '';
 
     $revision_log = ($revision->log != '') ? '<p class="revision-log">' . filter_xss($revision->log) . '</p>' : '';
-    if ($revision->current_vid > 0) {
+    if ($revision->vid == $latest_revision->vid) {
       $form['info'][$revision->vid] = array(
         '#markup' => t('!date by !username', array(
           '!date' => l(format_date($revision->timestamp, 'small'), "node/$node->nid"),
