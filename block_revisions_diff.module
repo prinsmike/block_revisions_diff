@@ -29,6 +29,7 @@ function block_revisions_diff_revisions($form, $form_state, $delta) {
 
 	$revision_list = block_revision_list($delta);
 	$latest_revision = reset($revision_list);
+  dsm($latest_revision);
 
   	// By comparing the timestamp of the block with the timestamp of the
   	// most recent revision, we can determine if the block was altered
@@ -57,11 +58,11 @@ function block_revisions_diff_revisions($form, $form_state, $delta) {
   }
 
   $revert_permission = FALSE;
-  if ((user_access('revert revisions') || user_access('administer nodes')) && node_access('update', $node)) {
+  if ((user_access('revert revisions') || user_access('administer nodes')) {
     $revert_permission = TRUE;
   }
   $delete_permission = FALSE;
-  if ((user_access('delete revisions') || user_access('administer nodes')) && node_access('delete', $node)) {
+  if ((user_access('delete revisions') || user_access('administer nodes')) {
     $delete_permission = TRUE;
   }
 
