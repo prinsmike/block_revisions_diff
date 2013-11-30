@@ -3,6 +3,21 @@
 /**
  * Implements hook_menu().
  */
+function block_revisions_diff_menu() {
+  $items['admin/structure/block/manage/%/%/revisions/view'] = array(
+    'title' => 'Compare revisions',
+    'page callback' => 'block_revisions_diff_compare',
+    'page arguments' => array(1, 4, 5, 6),
+    'type' => MENU_LOCAL_TASK,
+    'access callback' => 'block_revisions_diff_access',
+    'access arguments' => array(1),
+    'tab_parent' => 'admin/structure/block/manage/%/%/revisions',
+    );
+}
+
+/**
+ * Implements hook_menu_alter().
+ */
 function block_revisions_diff_menu_alter(&$items) {
 	$items['admin/structure/block/manage/%/%/revisions'] = array(
 		'title' => 'List revisions',
@@ -23,6 +38,11 @@ function block_revisions_diff_overview($delta) {
 function block_revisions_diff_revisions($form, $form_state, $delta) {
 
 	module_load_include('inc', 'block_revisions', 'block_revisions.admin');
+
+  $form['nid'] = array(
+    '#type' => 'hidden',
+    '#value' => $delta,
+  );
 	
 	// Fetch information about the block and the current revision from the database.
 	$block = db_query('SELECT b.info, b.timestamp, b.uid FROM {block_custom} b WHERE b.bid = :bid', array(':bid' => $delta))->fetchObject();
@@ -126,6 +146,12 @@ function block_revisions_diff_revisions($form, $form_state, $delta) {
   return $form;
 }
 
+function block_revisions_diff_revisions_submit($form, &$form_state) {
+  $old_vid = min($form_state['values']['old'], $form_state['values']['new']);
+  $new_vid = max($form_state['values']['old'], $form_state['values']['new']);
+  $form_state['redirect'] = 'admin/structure/block/manage/block/' . $form_state['values']['delta'] . '/revisions/view/' . $old_vid . '/' . $new_vid;
+}
+
 function block_revisions_diff_access($module, $delta) {
   if ($module !== 'block') {
     return FALSE;
@@ -133,6 +159,141 @@ function block_revisions_diff_access($module, $delta) {
   $revision_count = db_query('SELECT count(vid) FROM {boxes_revisions} WHERE bid = :bid', array(':bid' => $delta))->fetchField();
 
   return user_access('administer blocks') && ($revision_count >= 1);
+}
+
+function block_revisions_diff_compare($delta, $old_vid, $new_vid, $state = NULL) {
+  // Attaches the CSS.
+  $build['#attached'] = diff_build_attachments();
+
+  $default_state = variable_get('diff_default_state_node', 'raw');
+  if (empty($state)) {
+    $state = $default_state;
+  }
+  $state = str_replace('-', '_', $state);
+  if (!array_key_exists($state, diff_available_states())) {
+    $state = $default_state;
+  }
+
+  // Same title as the 'Revisions' tab. Blocked by non-page requests.
+  if (node_is_page($node)) {
+    drupal_set_title(t('Revisions for %title', array('%title' => $node->title)), PASS_THROUGH);
+  }
+  $node_revisions = node_revision_list($node);
+
+  $old_node = node_load($node->nid, $old_vid);
+  $new_node = node_load($node->nid, $new_vid);
+
+  // Generate table header (date, username, log message).
+  $old_header = t('!date by !username', array(
+    '!date' => l(format_date($old_node->revision_timestamp), "node/$node->nid/revisions/$old_node->vid/view", array('absolute' => 1)),
+    '!username' => theme('username', array('account' => $node_revisions[$old_vid])),
+  ));
+  $new_header = t('!date by !username', array(
+    '!date' => l(format_date($new_node->revision_timestamp), "node/$node->nid/revisions/$new_node->vid/view", array('absolute' => 1)),
+    '!username' => theme('username', array('account' => $node_revisions[$new_vid])),
+  ));
+
+  $old_log = $old_node->log != '' ? '<p class="revision-log">' . filter_xss($old_node->log) . '</p>' : '';
+  $new_log = $new_node->log != '' ? '<p class="revision-log">' . filter_xss($new_node->log) . '</p>' : '';
+
+  // Generate previous diff/next diff links.
+  $nav_suffix = ($default_state != $state) ? '/' . str_replace('_', '-', $state) : '';
+  $next_vid = _diff_get_next_vid($node_revisions, $new_vid);
+  if ($next_vid) {
+    $next_link = l(t('Next difference >'), 'node/' . $node->nid . '/revisions/view/' . $new_vid . '/' . $next_vid . $nav_suffix, array('absolute' => 1));
+  }
+  else {
+    $next_link = '';
+  }
+  $prev_vid = _diff_get_previous_vid($node_revisions, $old_vid);
+  if ($prev_vid) {
+    $prev_link = l(t('< Previous difference'), 'node/' . $node->nid . '/revisions/view/' . $prev_vid . '/' . $old_vid . $nav_suffix, array('absolute' => 1));
+  }
+  else {
+    $prev_link = '';
+  }
+
+  $header = _diff_default_header($old_header, $new_header);
+  $rows = array();
+  if ($old_log || $new_log) {
+    $rows['logs'] = array(
+      array(
+        'data' => $old_log,
+        'colspan' => 2,
+      ),
+      array(
+        'data' => $new_log,
+        'colspan' => 2,
+      ),
+    );
+  }
+  $rows['navigation'] = array(
+    array(
+      'data' => $prev_link,
+      'class' => array('diff-prevlink'),
+      'colspan' => 2,
+    ),
+    array(
+      'data' => $next_link,
+      'class' => array('diff-nextlink'),
+      'colspan' => 2,
+    ),
+  );
+
+  $links = array();
+  foreach (diff_available_states('node') as $alternative_state => $label) {
+    if ($alternative_state == $state) {
+      // @todo: Should we show both or just alternatives?
+    }
+    $links[$alternative_state] = array(
+      'title' => $label,
+      'href' => "node/{$node->nid}/revisions/view/{$old_vid}/{$new_vid}" . ($alternative_state == $default_state ? '' : '/' . str_replace('_', '-', $alternative_state)),
+    );
+  }
+  if (count($links) > 1) {
+    $state_links = theme('links', array(
+      'links' => $links,
+      'attributes' => array('class' => array('links', 'inline')),
+    ));
+    $rows['states'] = array(
+      array(
+        'data' => $state_links,
+        'class' => 'diff-links',
+        'colspan' => 4,
+      ),
+    );
+  }
+  $rows = array_merge($rows, _diff_body_rows($old_node, $new_node, $state));
+
+  $build['diff_table'] = array(
+    '#theme' => 'table__diff__standard',
+    '#header' => $header,
+    '#rows' => $rows,
+    '#attributes' => array('class' => array('diff')),
+    '#colgroups' => _diff_default_cols(),
+    '#sticky' => FALSE,
+  );
+
+  // Allow users to hide or set the display mode of the preview.
+  if (node_is_page($node) && $view_mode = variable_get('diff_view_mode_preview_node_' . $new_node->type, 'full')) {
+    $header = '';
+    if ($node->vid == $new_vid) {
+      $header .= '<div class="diff-section-title">' . t('Current revision:') . '</div>';
+    }
+    else {
+      $header .= '<div class="diff-section-title">' . t('Revision of @new_date:', array('@new_date' => format_date($new_node->revision_timestamp))) . '</div>';
+    }
+    $build['diff_preview']['header']['#markup'] = $header;
+    // Don't include node links or comments when viewing the diff.
+    $build['diff_preview']['content'] = node_view($new_node, $view_mode);
+    if (isset($build['diff_preview']['content']['links'])) {
+      unset($build['diff_preview']['content']['links']);
+    }
+    if (isset($build['diff_preview']['content']['comments'])) {
+      unset($build['diff_preview']['content']['comments']);
+    }
+  }
+  return $build;
 }
 
 /**
