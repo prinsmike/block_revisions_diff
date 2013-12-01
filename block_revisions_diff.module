@@ -174,11 +174,8 @@ function block_revisions_diff_compare($delta, $old_vid, $new_vid, $state = NULL)
     $state = $default_state;
   }
 
-  // Same title as the 'Revisions' tab. Blocked by non-page requests.
-  if (node_is_page($node)) {
-    drupal_set_title(t('Revisions for %title', array('%title' => $node->title)), PASS_THROUGH);
-  }
-  $node_revisions = node_revision_list($node);
+  $revision_list = block_revision_list($delta);
+  $latest_revision = reset($revision_list);
 
   $old_node = node_load($node->nid, $old_vid);
   $new_node = node_load($node->nid, $new_vid);
