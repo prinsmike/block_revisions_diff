@@ -50,6 +50,9 @@ function block_revisions_diff_revisions($form, $form_state, $delta) {
 	$revision_list = block_revision_list($delta);
 	$latest_revision = reset($revision_list);
 
+  dsm('function: block_revisions_diff_compare()');
+  dsm($revision_list);
+
   	// By comparing the timestamp of the block with the timestamp of the
   	// most recent revision, we can determine if the block was altered
   	// after that revision was created. If it is, warn the user that
@@ -177,6 +180,7 @@ function block_revisions_diff_compare($delta, $old_vid, $new_vid, $state = NULL)
   $revision_list = block_revision_list($delta);
   $latest_revision = reset($revision_list);
 
+  dsm('function: block_revisions_diff_compare()');
   dsm($revision_list);
 
   // Generate table header (date, username, log message).
