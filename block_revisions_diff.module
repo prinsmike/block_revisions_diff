@@ -50,7 +50,7 @@ function block_revisions_diff_revisions($form, $form_state, $delta) {
 	$revision_list = block_revision_list($delta);
 	$latest_revision = reset($revision_list);
 
-  dsm('function: block_revisions_diff_compare()');
+  dsm('function: block_revisions_diff_revisions()');
   dsm($revision_list);
 
   	// By comparing the timestamp of the block with the timestamp of the
