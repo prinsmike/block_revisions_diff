@@ -185,18 +185,19 @@ function block_revisions_diff_compare($delta, $old_vid, $new_vid, $state = NULL)
 
   // Generate table header (date, username, log message).
   $old_header = t('!date by !username', array(
-    '!date' => l(format_date($old_node->revision_timestamp), "node/$node->nid/revisions/$old_node->vid/view", array('absolute' => 1)),
-    '!username' => theme('username', array('account' => $node_revisions[$old_vid])),
+    '!date' => format_date($revision_list[$old_vid]['timestamp']),
+    '!username' => theme('username', array('account' => $revisions_list[$old_vid]['name'])),
   ));
   $new_header = t('!date by !username', array(
-    '!date' => l(format_date($new_node->revision_timestamp), "node/$node->nid/revisions/$new_node->vid/view", array('absolute' => 1)),
-    '!username' => theme('username', array('account' => $node_revisions[$new_vid])),
+    '!date' => format_date($revision_list[$new_vid]['timestamp']),
+    '!username' => theme('username', array('account' => $revisions_list[$new_vid]['name'])),
   ));
 
-  $old_log = $old_node->log != '' ? '<p class="revision-log">' . filter_xss($old_node->log) . '</p>' : '';
-  $new_log = $new_node->log != '' ? '<p class="revision-log">' . filter_xss($new_node->log) . '</p>' : '';
+  $old_log = $revisions_list[$old_vid]['log'] != '' ? '<p class="revision-log">' . filter_xss($revisions_list[$old_vid]['log']) . '</p>' : '';
+  $new_log = $revisions_list[$new_vid]['log'] != '' ? '<p class="revision-log">' . filter_xss($revisions_list[$new_vid]['log']) . '</p>' : '';
 
   // Generate previous diff/next diff links.
+  /* We'll leave this out for now.
   $nav_suffix = ($default_state != $state) ? '/' . str_replace('_', '-', $state) : '';
   $next_vid = _diff_get_next_vid($node_revisions, $new_vid);
   if ($next_vid) {
@@ -212,8 +213,9 @@ function block_revisions_diff_compare($delta, $old_vid, $new_vid, $state = NULL)
   else {
     $prev_link = '';
   }
+  */
 
-  $header = _diff_default_header($old_header, $new_header);
+  $header = _block_revisions_diff_default_header($old_header, $new_header);
   $rows = array();
   if ($old_log || $new_log) {
     $rows['logs'] = array(
@@ -227,6 +229,7 @@ function block_revisions_diff_compare($delta, $old_vid, $new_vid, $state = NULL)
       ),
     );
   }
+  /* Leaving this out for now.
   $rows['navigation'] = array(
     array(
       'data' => $prev_link,
@@ -239,7 +242,9 @@ function block_revisions_diff_compare($delta, $old_vid, $new_vid, $state = NULL)
       'colspan' => 2,
     ),
   );
+  */
 
+  /* Leaving this out for now.
   $links = array();
   foreach (diff_available_states('node') as $alternative_state => $label) {
     if ($alternative_state == $state) {
@@ -263,6 +268,8 @@ function block_revisions_diff_compare($delta, $old_vid, $new_vid, $state = NULL)
       ),
     );
   }
+  */
+  
   $rows = array_merge($rows, _diff_body_rows($old_node, $new_node, $state));
 
   $build['diff_table'] = array(
@@ -294,6 +301,22 @@ function block_revisions_diff_compare($delta, $old_vid, $new_vid, $state = NULL)
     }
   }
   return $build;
+}
+
+/**
+ * Helper function to create default 'header' array for diff table.
+ */
+function _block_revisions_diff_default_header($old_header = '', $new_header = '') {
+  return array(
+    array(
+      'data' => $old_header,
+      'colspan' => 2,
+    ),
+    array(
+      'data' => $new_header,
+      'colspan' => 2,
+    ),
+  );
 }
 
 /**
