@@ -177,8 +177,7 @@ function block_revisions_diff_compare($delta, $old_vid, $new_vid, $state = NULL)
   $revision_list = block_revision_list($delta);
   $latest_revision = reset($revision_list);
 
-  $old_node = node_load($node->nid, $old_vid);
-  $new_node = node_load($node->nid, $new_vid);
+  dsm($revision_list);
 
   // Generate table header (date, username, log message).
   $old_header = t('!date by !username', array(
