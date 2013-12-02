@@ -39,7 +39,7 @@ function block_revisions_diff_revisions($form, $form_state, $delta) {
 
 	module_load_include('inc', 'block_revisions', 'block_revisions.admin');
 
-  $form['nid'] = array(
+  $form['delta'] = array(
     '#type' => 'hidden',
     '#value' => $delta,
   );
