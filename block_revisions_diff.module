@@ -320,6 +320,24 @@ function _block_revisions_diff_default_header($old_header = '', $new_header = ''
 }
 
 /**
+ * Creates an array of rows which represent the difference between the block body.
+ *
+ * @param object $old_block
+ *   Block for comparison which will be displayed on the left side.
+ * @param object $new_block
+ *   Block for comparison which will be displayed on the right side.
+ * @param boolean $state
+ *   The state to render for the diff.
+ */
+function _block_revisions_diff_body_rows($old_block, $new_block, $state = 'raw') {
+  $context = array(
+    'states' => array($state),
+    'view_mode' => 'diff_standard',
+  );
+  return block_revisions_diff_block_body_rows($old_block, $new_block, $context);
+}
+
+/**
  * Implements hook_theme().
  */
 function block_revisions_diff_theme() {
